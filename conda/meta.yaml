@@ -1,0 +1,51 @@
+{% set name = "pytango-db" %}
+{% set version = "0.2.0" %}
+
+package:
+  name: "{{ name|lower }}"
+  version: "{{ version }}"
+
+source:
+  path: ..
+
+build:
+  number: 0
+  entry_points:
+    - DataBaseds = tangodb.database:main
+  script: "{{ PYTHON }} -m pip install . -vv"
+
+requirements:
+  host:
+    #- futures
+    - gevent
+    - pip
+    - pytango
+    - python {{ python }}
+  run:
+    #- futures
+    - gevent
+    - pytango
+    - python {{ python }}
+
+test:
+  imports:
+    - tangodb
+    - tangodb.db_access
+  commands:
+    - DataBaseds --help
+  #requires:
+  #  - pytest
+  #  - pytest-cov
+
+about:
+  home: "http://github.com/ALBA-Synchrotron/pytango-db"
+  license: GPLv3
+  license_family: GPL3
+  license_file: 
+  summary: "Python Tango Database server"
+  doc_url: 
+  dev_url: 
+
+extra:
+  recipe-maintainers:
+    - your-github-id-here
