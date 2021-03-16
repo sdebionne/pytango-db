@@ -143,6 +143,37 @@ CREATE TABLE IF NOT EXISTS property_device (
 ) ;
 
 #
+# Table structure for table 'property_pipe_class'
+#
+
+CREATE TABLE IF NOT EXISTS property_pipe_class (
+  class varchar(255) NOT NULL default '',
+  pipe varchar(255) NOT NULL default '',
+  name varchar(255) NOT NULL default '',
+  count int(11) NOT NULL default '0',
+  value text default NULL,
+  updated timestamp NOT NULL,
+  accessed timestamp NOT NULL default '2000-01-01 00:00:00',
+  comment text
+) ;
+
+#
+# Table structure for table 'property_pipe_device'
+#
+
+CREATE TABLE IF NOT EXISTS property_pipe_device (
+  device varchar(255) NOT NULL default '',
+  pipe varchar(255) NOT NULL default '',
+  name varchar(255) NOT NULL default '',
+  count int(11) NOT NULL default '0',
+  value text default NULL,
+  updated timestamp NOT NULL,
+  accessed timestamp NOT NULL default '2000-01-01 00:00:00',
+  comment text
+) ;
+
+
+#
 # Table structure for table 'server'
 #
 
@@ -164,6 +195,9 @@ CREATE TABLE IF NOT EXISTS device_history_id (
 CREATE TABLE IF NOT EXISTS device_attribute_history_id (
   id int(11) NOT NULL default '0'
 ) ;
+CREATE TABLE IF NOT EXISTS device_pipe_history_id (
+  id bigint unsigned NOT NULL default '0'
+) ;
 
 CREATE TABLE IF NOT EXISTS class_history_id (
   id int(11) NOT NULL default '0'
@@ -171,6 +205,9 @@ CREATE TABLE IF NOT EXISTS class_history_id (
 
 CREATE TABLE IF NOT EXISTS class_attribute_history_id (
   id int(11) NOT NULL default '0'
+) ;
+CREATE TABLE IF NOT EXISTS class_pipe_history_id (
+  id bigint unsigned NOT NULL default '0'
 ) ;
 
 CREATE TABLE IF NOT EXISTS object_history_id (
@@ -223,6 +260,26 @@ CREATE TABLE IF NOT EXISTS property_attribute_device_hist (
   date timestamp NOT NULL,
   device varchar(255) NOT NULL default '',
   attribute varchar(255) NOT NULL default '',
+  name varchar(255) NOT NULL default '',
+  count int(11) NOT NULL default '0',
+  value text
+) ;
+
+CREATE TABLE IF NOT EXISTS property_pipe_class_hist (
+  id bigint unsigned NOT NULL default '0',
+  date timestamp NOT NULL,
+  class varchar(255) NOT NULL default '',
+  pipe varchar(255) NOT NULL default '',
+  name varchar(255) NOT NULL default '',
+  count int(11) NOT NULL default '0',
+  value text
+) ;
+
+CREATE TABLE IF NOT EXISTS property_pipe_device_hist (
+  id bigint unsigned NOT NULL default '0',
+  date timestamp NOT NULL,
+  device varchar(255) NOT NULL default '',
+  pipe varchar(255) NOT NULL default '',
   name varchar(255) NOT NULL default '',
   count int(11) NOT NULL default '0',
   value text
