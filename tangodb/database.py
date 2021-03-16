@@ -1759,7 +1759,7 @@ def main(argv = None):
         parser.add_option("--port",dest="port",default=10000, type=int,
                           help="database port")
         (options,args) = parser.parse_args(argv)
-        options.argv = ["DataBaseds"] + args
+        options.argv = ["DataBaseds"] + args    
 
     # Check plugin availability
     get_plugin(options.db_access)

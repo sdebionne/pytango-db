@@ -1045,6 +1045,10 @@ class SqlDatabase(object):
         result = []
         server_list = self._get_server_list(wildcard)
         return server_list
+
+    def get_server_name_list(self, wildcard):
+        result = []
+        server_list = self._get_server_list(wildcard)
         for server in server_list:
             found = 0
             server_name = server.split("/")[0]
