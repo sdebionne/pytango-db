@@ -4,7 +4,7 @@
 """The setup script."""
 
 import sys
-from setuptools import setup, find_packages
+from setuptools import setup
 
 
 TESTING = any(x in sys.argv for x in ["test", "pytest"])
@@ -37,7 +37,7 @@ setup(
     description="Python Tango Database server",
     entry_points={
         'console_scripts': [
-            'DataBaseds = tangodb:main',
+            'DataBaseds = tangodb.database:main',
         ]
     },
     install_requires=requirements,
@@ -45,7 +45,6 @@ setup(
     long_description="A device server written in python that mimics the official Tango DataBaseds",
     keywords='tango, pytango, database, device server',
     name='pytango-db',
-    packages=find_packages(),
     package_data={'': ['*.sql']},
     setup_requires=setup_requirements,
     test_suite='tests',
