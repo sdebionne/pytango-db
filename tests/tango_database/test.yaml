@@ -1,0 +1,11 @@
+device:
+- class: DServer
+  tango_name: dserver/test/test1
+- class: Device1
+  tango_name: test/device1/1
+  properties:
+    _prop1: 'Hello, world!'
+- class: Device2
+  tango_name: test/device2/1
+personal_name: test1
+server: test

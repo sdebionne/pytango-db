@@ -2209,7 +2209,7 @@ def main(argv=None):
     return main_run(options)
 
 
-def main_run(opts, post_init_callback):
+def main_run(opts, post_init_callback=None):
     global options
     options = opts
 
