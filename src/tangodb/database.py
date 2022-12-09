@@ -7,12 +7,7 @@ import sys
 import time
 import logging
 import functools
-
-try:
-    import argparse
-except ImportError:
-    argparse = None
-    from optparse import OptionParser
+import argparse
 
 import tango
 from tango import AttrWriteType, GreenMode
@@ -22,6 +17,14 @@ from tango.server import run
 
 from tango.globals import get_class_by_class, get_constructed_class_by_class
 
+from . import db_access
+from .db_errors import (
+    DB_IncorrectArguments,
+    DB_IncorrectDeviceName,
+    DB_IncorrectServerName,
+)
+
+tango_raise = tango.Except.throw_exception
 
 READ_ONLY = AttrWriteType.READ
 WRITE_ONLY = AttrWriteType.WRITE
@@ -52,17 +55,6 @@ def set_db_name(db_name):
 
 def get_db_name():
     return DB_NAME
-
-
-from . import db_access
-
-# import db_access
-
-th_exc = tango.Except.throw_exception
-
-from .db_errors import *
-
-# import db_errors
 
 
 def check_device_name(dev_name):
@@ -172,7 +164,7 @@ class DataBase(Device):
         self.attr_StoredProcedureRelease_read = ""
         self.init_timing_stats()
         m = get_plugin(options.db_access)
-        self.db = m.get_db(personal_name=options.argv[1])
+        self.db = m.get_db(personal_name=options.argv[1], db_path=options.db_path)
         try:
             global WILDCARD_REPLACEMENT
             WILDCARD_REPLACEMENT = m.get_wildcard_replacement()
@@ -291,7 +283,7 @@ class DataBase(Device):
             self.warn_stream(
                 "DataBase::DbDeleteAllDeviceAttributeProperty(): insufficient number of arguments "
             )
-            th_exc(
+            tango_raise(
                 DB_IncorrectArguments,
                 "insufficient number of arguments to delete all device attribute(s) property",
                 "DataBase::DbDeleteAllDeviceAttributeProperty()",
@@ -302,7 +294,7 @@ class DataBase(Device):
         ret, d_name, dfm = check_device_name(dev_name)
 
         if not ret:
-            th_exc(
+            tango_raise(
                 DB_IncorrectDeviceName,
                 "device name ("
                 + argin
@@ -435,7 +427,7 @@ class DataBase(Device):
             self.warn_stream(
                 "DataBase::DbPutAttributeAlias(): insufficient number of arguments "
             )
-            th_exc(
+            tango_raise(
                 DB_IncorrectArguments,
                 "insufficient number of arguments to put attribute alias",
                 "DataBase::DbPutAttributeAlias()",
@@ -504,7 +496,7 @@ class DataBase(Device):
             self.warn_stream(
                 "DataBase::db_delete_device_attribute_property(): insufficient number of arguments "
             )
-            th_exc(
+            tango_raise(
                 DB_IncorrectArguments,
                 "insufficient number of arguments to delete device attribute property",
                 "DataBase::DeleteDeviceAttributeProperty()",
@@ -519,7 +511,7 @@ class DataBase(Device):
                 + argin
                 + " incorrect "
             )
-            th_exc(
+            tango_raise(
                 DB_IncorrectDeviceName,
                 "failed to delete device attribute property, device name incorrect",
                 "DataBase::DeleteDeviceAttributeProperty()",
@@ -582,7 +574,7 @@ class DataBase(Device):
         self._log.debug("In DbPutProperty()")
         object_name = argin[0]
         nb_properties = int(argin[1])
-        self.db.put_property(object_name, properties, argin[2:])
+        self.db.put_property(object_name, nb_properties, argin[2:])
 
     @command(
         dtype_in=("str",),
@@ -667,7 +659,7 @@ class DataBase(Device):
         self._log.debug("In DbGetDeviceAlias()")
         ret, dev_name, dfm = check_device_name(argin)
         if not ret:
-            th_exc(
+            tango_raise(
                 DB_IncorrectDeviceName,
                 "device name ("
                 + argin
@@ -761,7 +753,7 @@ class DataBase(Device):
             self.warn_stream(
                 "DataBase::db_delete_class_attribute(): insufficient number of arguments "
             )
-            th_exc(
+            tango_raise(
                 DB_IncorrectArguments,
                 "insufficient number of arguments to delete class attribute",
                 "DataBase::DeleteClassAttribute()",
@@ -813,7 +805,7 @@ class DataBase(Device):
             self.warn_stream(
                 "DataBase::db_delete_device_attribute(): insufficient number of arguments "
             )
-            th_exc(
+            tango_raise(
                 DB_IncorrectArguments,
                 "insufficient number of arguments to delete device attribute",
                 "DataBase::DeleteDeviceAttribute()",
@@ -828,7 +820,7 @@ class DataBase(Device):
                 + argin
                 + " incorrect "
             )
-            th_exc(
+            tango_raise(
                 DB_IncorrectDeviceName,
                 "failed to delete device attribute, device name incorrect",
                 "DataBase::DeleteDeviceAttribute()",
@@ -867,7 +859,7 @@ class DataBase(Device):
 
         pos = tmp_argin.find(";")
         if pos != -1 and len(tmp_argin) > (pos + 1):
-            th_exc(
+            tango_raise(
                 DB_IncorrectArguments,
                 "SQL command not valid: " + argin,
                 "DataBase::ExportDevice()",
@@ -1008,7 +1000,7 @@ class DataBase(Device):
             self.warn_stream(
                 "DataBase::db_delete_device(): device name " + argin + " incorrect "
             )
-            th_exc(
+            tango_raise(
                 DB_IncorrectDeviceName,
                 "failed to delete device, device name incorrect",
                 "DataBase::DeleteDevice()",
@@ -1074,7 +1066,7 @@ class DataBase(Device):
             self.warn_stream(
                 "DataBase::DbRenameServer(): insufficient number of arguments "
             )
-            th_exc(
+            tango_raise(
                 DB_IncorrectArguments,
                 "insufficient number of arguments (two required: old name and new name",
                 "DataBase::DbRenameServer",
@@ -1087,7 +1079,7 @@ class DataBase(Device):
             self.warn_stream(
                 "DataBase::DbRenameServer(): wrong syntax in command args "
             )
-            th_exc(
+            tango_raise(
                 DB_IncorrectArguments,
                 "Wrong syntax in command args (ds_exec_name/inst_name)",
                 "DataBase::DbRenameServer",
@@ -1143,11 +1135,11 @@ class DataBase(Device):
         :rtype: tango.DevVoid"""
         self._log.debug("In DbDeleteServer()")
 
-        if "*" in argin or "%" in argin or not "/" in argin:
+        if "*" in argin or "%" in argin or "/" not in argin:
             self.warn_stream(
                 "DataBase::db_delete_server(): server name " + argin + " incorrect "
             )
-            th_exc(
+            tango_raise(
                 DB_IncorrectServerName,
                 "failed to delete server, server name incorrect",
                 "DataBase::DeleteServer()",
@@ -1189,7 +1181,8 @@ class DataBase(Device):
         :rtype: tango.DevVarStringArray"""
         self._log.debug("In DbGetDataForServerCache()")
         #  TODO
-        return [""]
+        return None
+        # return [""]
 
     @command(
         dtype_in=("str",),
@@ -1436,7 +1429,7 @@ class DataBase(Device):
             self.warn_stream(
                 "DataBase::DbPutDeviceAlias(): insufficient number of arguments "
             )
-            th_exc(
+            tango_raise(
                 DB_IncorrectArguments,
                 "insufficient number of arguments to put device alias",
                 "DataBase::DbPutDeviceAlias()",
@@ -1551,7 +1544,7 @@ class DataBase(Device):
             self.warn_stream(
                 "DataBase::db_delete_class_attribute_property(): insufficient number of arguments "
             )
-            th_exc(
+            tango_raise(
                 DB_IncorrectArguments,
                 "insufficient number of arguments to delete class attribute property",
                 "DataBase::DeleteClassAttributeProperty()",
@@ -1618,7 +1611,7 @@ class DataBase(Device):
             self.warn_stream(
                 "DataBase::AddServer(): incorrect number of input arguments "
             )
-            th_exc(
+            tango_raise(
                 DB_IncorrectArguments,
                 "incorrect no. of input arguments, needs at least 3 (server,device,class)",
                 "DataBase::AddServer()",
@@ -1629,7 +1622,7 @@ class DataBase(Device):
             d_name, klass_name = argin[i * 2 + 1], argin[i * 2 + 2]
             ret, dev_name, dfm = check_device_name(d_name)
             if not ret:
-                th_exc(
+                tango_raise(
                     DB_IncorrectDeviceName,
                     "device name ("
                     + d_name
@@ -1744,7 +1737,6 @@ class DataBase(Device):
         :return:
         :rtype: tango.DevVoid"""
         self._log.debug("In DbDeleteClassProperty()")
-        klass_name = argin[0]
         for prop_name in argin[1:]:
             self.db.delete_class_property(prop_name)
 
@@ -1854,7 +1846,7 @@ class DataBase(Device):
             self.warn_stream(
                 "DataBase::DbPutServerInfo(): insufficient number of arguments "
             )
-            th_exc(
+            tango_raise(
                 DB_IncorrectArguments,
                 "insufficient server info",
                 "DataBase::DbPutServerInfo()",
@@ -1868,7 +1860,6 @@ class DataBase(Device):
         if len(argin) > 4:
             tmp_extra = argin[4:]
 
-        tmp_len = len(argin) - 1
         self.db.put_server_info(tmp_server, tmp_host, tmp_mode, tmp_level, tmp_extra)
 
     @command(dtype_in="str", doc_in="device alias name", doc_out="none")
@@ -1905,7 +1896,7 @@ class DataBase(Device):
             self.warn_stream(
                 "DataBase::db_export_event(): insufficient export info for event "
             )
-            th_exc(
+            tango_raise(
                 DB_IncorrectArguments,
                 "insufficient export info for event",
                 "DataBase::ExportEvent()",
@@ -1970,7 +1961,7 @@ class DataBase(Device):
         self._log.debug("In DbGetDeviceInfo()")
         ret, dev_name, dfm = check_device_name(argin)
         if not ret:
-            th_exc(
+            tango_raise(
                 DB_IncorrectDeviceName,
                 "device name ("
                 + argin
@@ -2103,7 +2094,7 @@ class DataBase(Device):
             self.warn_stream(
                 "DataBase::AddDevice(): incorrect number of input arguments "
             )
-            th_exc(
+            tango_raise(
                 DB_IncorrectArguments,
                 "incorrect no. of input arguments, needs at least 3 (server,device,class)",
                 "DataBase::AddDevice()",
@@ -2120,7 +2111,7 @@ class DataBase(Device):
 
         ret, dev_name, dfm = check_device_name(d_name)
         if not ret:
-            th_exc(
+            tango_raise(
                 DB_IncorrectDeviceName,
                 "device name ("
                 + d_name
@@ -2169,7 +2160,7 @@ def DbExportDevice(self, argin):
         self.warn_stream(
             "DataBase::DbExportDevice(): insufficient export info for device "
         )
-        th_exc(
+        tango_raise(
             DB_IncorrectArguments,
             "insufficient export info for device",
             "DataBase::ExportDevice()",
@@ -2185,48 +2176,33 @@ def DbExportDevice(self, argin):
 def main(argv=None):
     # Parameters management
     global options
-    if argparse:
-        parser = argparse.ArgumentParser()
-        parser.add_argument(
-            "--db_access", dest="db_access", default="sqlite3", help="database type"
-        )
-        parser.add_argument(
-            "-e", "--embedded", dest="embedded", default=False, action="store_true"
-        )
-        parser.add_argument(
-            "--logging_level",
-            "-l",
-            dest="logging_level",
-            type=int,
-            default=0,
-            help="logging_level 0:WARNING,1:INFO,2:DEBUG",
-        )
-        parser.add_argument(
-            "--port", dest="port", default=None, type=int, help="database port"
-        )
-        parser.add_argument("argv", nargs=argparse.REMAINDER)
-        options = parser.parse_args(argv)
-        options.argv = ["DataBaseds"] + options.argv
-    else:
-        parser = OptionParser()
-        parser.add_option(
-            "--db_access", dest="db_access", default="sqlite3", help="database type"
-        )
-        parser.add_option(
-            "-l",
-            "--logging_level",
-            dest="logging_level",
-            default=0,
-            help="logging_level 0:WARNING,1:INFO,2:DEBUG",
-        )
-        parser.add_option(
-            "-e", "--embedded", dest="embedded", default=False, action="store_true"
-        )
-        parser.add_option(
-            "--port", dest="port", default=10000, type=int, help="database port"
-        )
-        (options, args) = parser.parse_args(argv)
-        options.argv = ["DataBaseds"] + args
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--db_access", dest="db_access", default="sqlite3", help="database type"
+    )
+    parser.add_argument(
+        "--db_path",
+        dest="db_path",
+        default="tango_database",
+        help="database path to file or folder",
+    )
+    parser.add_argument(
+        "-e", "--embedded", dest="embedded", default=False, action="store_true"
+    )
+    parser.add_argument(
+        "--logging_level",
+        "-l",
+        dest="logging_level",
+        type=int,
+        default=0,
+        help="logging_level 0:WARNING,1:INFO,2:DEBUG",
+    )
+    parser.add_argument(
+        "--port", dest="port", default=None, type=int, help="database port"
+    )
+    parser.add_argument("argv", nargs=argparse.REMAINDER)
+    options = parser.parse_args(argv)
+    options.argv = ["DataBaseds"] + options.argv
 
     # Check plugin availability
     get_plugin(options.db_access)
@@ -2235,7 +2211,7 @@ def main(argv=None):
     if port is None:
         try:
             _, port = tango.ApiUtil.get_env_var("TANGO_HOST").split(":")
-        except:
+        except Exception:
             port = 10000
 
     options.argv += ["-ORBendPoint", "giop:tcp::{0}".format(port)]
@@ -2255,7 +2231,7 @@ def main(argv=None):
             __run_embedded(db_name, options.argv)
         else:
             __run(db_name, options.argv)
-    except Exception as e:
+    except Exception:
         import traceback
 
         traceback.print_exc()
