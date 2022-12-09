@@ -159,6 +159,7 @@ class DataBase(Device):
     Timing_minimum = attribute(dtype=("float64",), max_dim_x=128, access=READ_ONLY)
 
     def init_device(self):
+        # global options
         self._log = logging.getLogger(self.get_name())
         self._log.debug("In init_device()")
         self.attr_StoredProcedureRelease_read = ""
@@ -2202,7 +2203,15 @@ def main(argv=None):
     )
     parser.add_argument("argv", nargs=argparse.REMAINDER)
     options = parser.parse_args(argv)
+
     options.argv = ["DataBaseds"] + options.argv
+
+    return main_run(options)
+
+
+def main_run(opts, post_init_callback):
+    global options
+    options = opts
 
     # Check plugin availability
     get_plugin(options.db_access)
@@ -2230,7 +2239,7 @@ def main(argv=None):
         if options.embedded:
             __run_embedded(db_name, options.argv)
         else:
-            __run(db_name, options.argv)
+            __run(db_name, options.argv, post_init_callback)
     except Exception:
         import traceback
 
@@ -2279,7 +2288,7 @@ def __monkey_patch_util(util):
     util.server_run = util.orb_run
 
 
-def __run(db_name, argv):
+def __run(db_name, argv, post_init_callback):
     """
     Runs the Database DS as a standalone database. Run it with::
 
@@ -2307,6 +2316,8 @@ def __run(db_name, argv):
         version = util.get_version_str()
         DbExportDevice(dbase, [dserver_name, dserver_ior, host, pid, version])
         DbExportDevice(dbase, [dbase_name, dbase_ior, host, pid, version])
+        if post_init_callback:
+            post_init_callback()
 
     run(
         (DataBase,),
