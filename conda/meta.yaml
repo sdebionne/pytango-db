@@ -20,7 +20,6 @@ requirements:
     - gevent
     - pip
     - pytango
-    - six
     - python
   run:
     - gevent

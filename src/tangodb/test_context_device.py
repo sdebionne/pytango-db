@@ -5,7 +5,6 @@
 # Imports
 import os
 import sys
-import six
 import time
 import struct
 import socket
@@ -16,7 +15,7 @@ from functools import partial
 # Concurrency imports
 import threading
 import multiprocessing
-from six.moves import queue
+import queue
 
 # CLI imports
 from ast import literal_eval
@@ -40,7 +39,7 @@ IOR = collections.namedtuple(
 
 
 def ascii_to_bytes(s):
-    convert = lambda x: six.int2byte(int(x, 16))
+    convert = lambda x: bytes((int(x, 16),))
     return b"".join(convert(s[i : i + 2]) for i in range(0, len(s), 2))
 
 
@@ -461,8 +460,8 @@ class MultiDeviceTestContext(object):
                 )
         try:
             self.host, self.port = args
-        except ValueError:
-            six.reraise(*args)
+        except ValueError as e:
+            raise RuntimeError(*args) from e
         # Get server proxy
         self.server = DeviceProxy(self.get_server_access())
         self.server.ping()

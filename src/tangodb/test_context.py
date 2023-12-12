@@ -1,7 +1,6 @@
 import os
 import sys
 import time
-from six import reraise
 from argparse import Namespace
 from functools import partial
 
@@ -114,8 +113,8 @@ class DataBaseContext:
                 )
         try:
             self.host, self.port = args
-        except ValueError:
-            reraise(*args)
+        except ValueError as e:
+            raise RuntimeError(*args) from e
         # Get server proxy
         self.server = DeviceProxy(self.get_server_access())
         self.server.ping()
