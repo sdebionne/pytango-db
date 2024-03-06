@@ -9,23 +9,21 @@ source:
   path: ..
 
 build:
-  number: 0
+  noarch: python
+  number: 1
   entry_points:
     - DataBaseds = tangodb.database:main
   script: "{{ PYTHON }} -m pip install . -vv"
 
 requirements:
   host:
-    #- futures
     - gevent
     - pip
     - pytango
-    - python {{ python }}
+    - python
   run:
-    #- futures
     - gevent
     - pytango
-    - python {{ python }}
 
 test:
   imports:
