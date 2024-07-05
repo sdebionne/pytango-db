@@ -24,6 +24,7 @@ requirements:
   run:
     - gevent
     - pytango
+    - ruamel.yaml
 
 test:
   imports:
